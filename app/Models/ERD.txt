@@ -1,0 +1,467 @@
+erDiagram
+    USERS {
+        bigint id PK
+        string name
+        string email
+        string password
+        string role "customer, admin"
+        timestamp created_at
+    }
+
+    CATEGORIES {
+        bigint id PK
+        string name
+        string slug
+        timestamp created_at
+    }
+
+    PRODUCTS {
+        bigint id PK
+        bigint category_id FK
+        string name
+        string slug
+        text description
+        decimal price
+        integer stock
+        string image
+        timestamp created_at
+    }
+
+    ORDERS {
+        bigint id PK
+        bigint user_id FK
+        decimal total_price
+        string status "pending, processing, completed, cancelled"
+        string shipping_address
+        string phone
+        timestamp created_at
+    }
+
+    ORDER_ITEMS {
+        bigint id PK
+        bigint order_id FK
+        bigint product_id FK
+        integer quantity
+        decimal price "Price at time of purchase"
+        timestamp created_at
+    }
+
+    %% Define Relationships
+    USERS ||--o{ ORDERS : "places"
+    CATEGORIES ||--|{ PRODUCTS : "contains"
+    PRODUCTS ||--o{ ORDER_ITEMS : "is_part_of"
+    ORDERS ||--|{ ORDER_ITEMS : "includes"
+
+
+
+
+ERD
+
+
+┌──────────────┐
+│    USERS     │
+│──────────────│
+│ PK id        │
+│ name         │
+│ email        │
+│ password     │
+│ role         │
+└──────┬───────┘
+       │ 1
+       │
+       │ places
+       │
+       │ many
+       ▼
+┌──────────────┐
+│    ORDERS    │
+│──────────────│
+│ PK id        │
+│ FK user_id   │
+│ total_price  │
+│ status       │
+│ address      │
+│ phone        │
+└──────┬───────┘
+       │ 1
+       │
+       │ contains
+       │
+       │ many
+       ▼
+┌─────────────────┐
+│   ORDER_ITEMS   │
+│─────────────────│
+│ PK id           │
+│ FK order_id     │
+│ FK product_id   │
+│ quantity        │
+│ price           │
+└────────┬────────┘
+         │ many
+         │
+         │ belongs to
+         │
+         │ 1
+         ▼
+┌──────────────┐
+│   PRODUCTS   │
+│──────────────│
+│ PK id        │
+│ FK category_id│
+│ name         │
+│ slug         │
+│ description  │
+│ price        │
+│ stock        │
+│ image        │
+└──────┬───────┘
+       │ many
+       │
+       │ belongs to
+       │
+       │ 1
+       ▼
+┌──────────────┐
+│  CATEGORIES  │
+│──────────────│
+│ PK id        │
+│ name         │
+│ slug         │
+└──────────────┘
+
+
+//=== Relationships ===
+
+User
+ └── hasMany(Order)
+
+Order
+ └── belongsTo(User)
+ └── hasMany(OrderItem)
+
+OrderItem
+ └── belongsTo(Order)
+ └── belongsTo(Product)
+
+Product
+ └── belongsTo(Category)
+ └── hasMany(OrderItem)
+
+Category
+ └── hasMany(Product)
+
+
+
+===== flow Admin create ====
+
+Admin
+ ↓
+Product Form
+ ↓
+Vue
+ ↓
+Axios
+ ↓
+POST /api/products
+ ↓
+Laravel Route
+ ↓
+Auth Middleware
+ ↓
+Admin Middleware
+ ↓
+ProductController@store
+ ↓
+Validation
+ ↓
+Image Upload
+ ↓
+Product Model
+ ↓
+Database
+ ↓
+JSON Response
+ ↓
+Vue
+ ↓
+Show Success
+
+
+
+==== processing ===
+
+Vue 3 = Frontend
+
+Vue ទទួលខុសត្រូវ៖
+
+UI
+Forms
+Buttons
+Product Cards
+Cart UI
+Checkout UI
+Router
+State
+
+
+Laravel = Backend
+
+Laravel ទទួលខុសត្រូវ៖
+
+API
+Authentication
+Authorization
+Validation
+Business Logic
+Database
+File Upload
+Orders
+Security
+
+PostgreSQL / MySQL = Database
+
+Database រក្សាទុក៖
+
+Users
+Products
+Categories
+Orders
+Order Items
+
+
+
+=== flow ===
+
+                  USER
+                   │
+                   ▼
+             ┌───────────┐
+             │  Vue 3    │
+             │ Frontend  │
+             └─────┬─────┘
+                   │
+                 Axios
+                   │
+                   ▼
+             ┌───────────┐
+             │ Laravel   │
+             │ REST API  │
+             └─────┬─────┘
+                   │
+          ┌────────┴────────┐
+          │                 │
+          ▼                 ▼
+   Authentication      Authorization
+     Sanctum              Roles
+          │                 │
+          └────────┬────────┘
+                   │
+                   ▼
+             Controllers
+                   │
+                   ▼
+                Models
+                   │
+                   ▼
+          ┌─────────────────┐
+          │ PostgreSQL/MySQL│
+          └─────────────────┘
+
+
+==== Example Flow ពេល User ទិញ Product =====
+
+1. User Login
+       ↓
+2. Laravel verify account
+       ↓
+3. Sanctum return Token
+       ↓
+4. Vue save Token
+       ↓
+5. User GET /products
+       ↓
+6. Laravel GET products from DB
+       ↓
+7. User click Add To Cart
+       ↓
+8. Pinia save Cart
+       ↓
+9. User click Checkout
+       ↓
+10. Vue POST /orders
+       ↓
+11. Laravel validate Order
+       ↓
+12. Create orders
+       ↓
+13. Create order_items
+       ↓
+14. Reduce product quantity
+       ↓
+15. Database save
+       ↓
+16. Laravel return success
+       ↓
+17. Vue show Order Success
+       ↓
+18. User can see Order History
+
+
+=== flow laravel ===
+
+POST /api/products
+        ↓
+api.php
+        ↓
+auth:sanctum
+        ↓
+admin middleware
+        ↓
+ProductController@store
+        ↓
+Validation
+        ↓
+Product Model
+        ↓
+products table
+        ↓
+INSERT
+        ↓
+Database
+        ↓
+JSON Response
+
+
+=== Login flow Backend ===
+
+POST /api/login
+       ↓
+Route
+       ↓
+AuthController@login
+       ↓
+Validate email/password
+       ↓
+Find User
+       ↓
+Hash::check()
+       ↓
+Create Sanctum Token
+       ↓
+Return Token
+
+
+=== Order flow Backend ===
+POST /api/orders
+       ↓
+auth:sanctum
+       ↓
+OrderController@store
+       ↓
+Validate items
+       ↓
+Find Products
+       ↓
+Check Stock
+       ↓
+Calculate Total
+       ↓
+Create Order
+       ↓
+Create Order Items
+       ↓
+Decrease Stock
+       ↓
+Commit Transaction
+       ↓
+Return JSON
+
+
+=== create laravel ===
+Database
+   ↓
+Migration
+   ↓
+Models
+   ↓
+Relationships
+   ↓
+Controllers
+   ↓
+API Routes
+   ↓
+Postman Test
+   ↓
+Vue Axios
+
+======== login flow ========
+
+                 REGISTER
+                    │
+                    ▼
+                Create User
+                    │
+                    ▼
+              Hash Password
+                    │
+                    ▼
+             Sanctum Token
+                    │
+                    ▼
+                  Vue.js
+                    │
+                    │
+                  LOGIN
+                    │
+                    ▼
+             Email + Password
+                    │
+                    ▼
+             Check User/Password
+                    │
+                    ▼
+             Sanctum Token
+                    │
+                    ▼
+              Vue stores Token
+                    │
+                    ▼
+          Authorization: Bearer Token
+                    │
+                    ▼
+              Laravel API
+                    │
+             ┌──────┴──────┐
+             ▼             ▼
+         Customer        Admin
+             │             │
+             ▼             ▼
+          Orders      Products CRUD
+                       Categories CRUD
+                       Order Management
+
+
+
+====== ចំណុចសំខាន់ដែលអ្នកគួរចងចាំ=====
+Request
+   ↓
+Validation
+   ↓
+Authentication
+   ↓
+Find Product
+   ↓
+Check Stock
+   ↓
+Create Order
+   ↓
+Create Order Items
+   ↓
+Decrease Stock
+   ↓
+Calculate Total
+   ↓
+Transaction Commit
+   ↓
+JSON Response
