@@ -35,16 +35,18 @@ class Product extends Model
         ];
     }
 
-
-    public function category():BelongsTo{
+    public function category(): BelongsTo
+    {
         return $this->belongsTo(Category::class);
     }
 
-    public  function orderItems():HasMany{
+    public function orderItems(): HasMany
+    {
         return $this->hasMany(Order_item::class);
     }
 
-    public function scopeInStock($query){
+    public function scopeInStock($query)
+    {
         return $query->where('stock', '>', 0);
     }
 }

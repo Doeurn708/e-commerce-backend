@@ -17,7 +17,8 @@ class CategoryController extends Controller
     public function __construct(private CloudinaryImageStore $images) {}
 
     // Get /api/categories
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $query = Category::with('products')->withCount('products');
 
         // search (name, slug)
@@ -55,7 +56,7 @@ class CategoryController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $categories
+                'data' => $categories,
             ]);
         }
 
@@ -63,12 +64,13 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $categories
+            'data' => $categories,
         ]);
     }
 
     // Get /api/categories/{id}/products
-    public function products(Request $request, $id){
+    public function products(Request $request, $id)
+    {
         $category = Category::withCount('products')->findOrFail($id);
 
         $query = $category->products()->with('category');
@@ -134,10 +136,11 @@ class CategoryController extends Controller
     }
 
     // Post /api/categories
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $validated = $request->validate([
-            'name'=>['required','string','max:255'],
-            'description'=>['nullable','string'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
         ]);
 
         $validated['slug'] = Str::slug($request->name);
@@ -148,12 +151,13 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category created successfully',
-            'data' => $category
-        ],201);
+            'data' => $category,
+        ], 201);
     }
 
     // Get /api/categories/{id}
-    public function show($id){
+    public function show($id)
+    {
         $category = Category::with('products')->withCount('products')->findOrFail($id);
 
         return response()->json([
@@ -163,10 +167,11 @@ class CategoryController extends Controller
     }
 
     // Put / PATCH /api/categories/{id}
-    public function update(Request $request , $id ){
+    public function update(Request $request, $id)
+    {
         $validated = $request->validate([
-            'name' => ['required','string','max:255'],
-            'description' => ['nullable','string'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
         ]);
 
         $category = Category::findOrFail($id);
@@ -190,7 +195,7 @@ class CategoryController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Category updated successfully',
-            'data' => $category
+            'data' => $category,
         ]);
     }
 

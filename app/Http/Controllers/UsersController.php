@@ -17,7 +17,8 @@ class UsersController extends Controller
     }
 
     // Get /api/users
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $this->authorizeAdmin($request);
 
         $query = User::query()
@@ -72,6 +73,7 @@ class UsersController extends Controller
         $users->getCollection()->transform(function ($user) {
             $user->phone = $user->phone ?: ($user->orders->first()?->phone ?? null);
             $user->setAttribute('total_spent', (float) ($user->orders_sum_total_price ?? 0));
+
             return $user;
         });
 
@@ -82,14 +84,15 @@ class UsersController extends Controller
     }
 
     // Post /api/users
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $this->authorizeAdmin($request);
 
         $validated = $request->validate([
-            'name' => ['required','string','max:255'],
-            'email' => ['required','email','unique:users,email'],
-            'password' => ['required','string','min:8'],
-            'role' => ['sometimes','in:customer,admin'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
+            'role' => ['sometimes', 'in:customer,admin'],
         ]);
 
         $user = User::create([
@@ -103,11 +106,12 @@ class UsersController extends Controller
             'success' => true,
             'message' => 'User created successfully',
             'data' => $user,
-        ],201);
+        ], 201);
     }
 
     // Get /api/users/{id}
-    public function show(Request $request, $id){
+    public function show(Request $request, $id)
+    {
         $this->authorizeAdmin($request);
 
         $user = User::with('orders')
@@ -124,15 +128,16 @@ class UsersController extends Controller
     }
 
     // Put / PATCH /api/users/{id}
-    public function update(Request $request , $id){
+    public function update(Request $request, $id)
+    {
         $this->authorizeAdmin($request);
 
         $validated = $request->validate([
-            'name' => ['required','string','max:255'],
-            'email' => ['required','email','unique:users,email,'.$id],
-            'password' => ['nullable','string','min:8'],
-            'role' => ['sometimes','in:customer,admin'],
-            'is_active' => ['sometimes','boolean'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email,'.$id],
+            'password' => ['nullable', 'string', 'min:8'],
+            'role' => ['sometimes', 'in:customer,admin'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
 
         $user = User::findOrFail($id);
@@ -141,7 +146,7 @@ class UsersController extends Controller
         $user->email = $validated['email'];
         $user->role = $validated['role'] ?? $user->role;
         $user->is_active = array_key_exists('is_active', $validated) ? $validated['is_active'] : $user->is_active;
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
         $user->save();
@@ -154,7 +159,8 @@ class UsersController extends Controller
     }
 
     // Delete /api/users/{id}
-    public function destroy(Request $request, $id){
+    public function destroy(Request $request, $id)
+    {
         $this->authorizeAdmin($request);
 
         $user = User::findOrFail($id);

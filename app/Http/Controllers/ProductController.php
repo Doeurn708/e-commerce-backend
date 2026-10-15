@@ -11,9 +11,9 @@ class ProductController extends Controller
 {
     public function __construct(private CloudinaryImageStore $images) {}
 
-
     // Get /api/products
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $query = Product::with('category');
 
         // search (name, slug, description)
@@ -86,7 +86,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $products
+            'data' => $products,
         ]);
     }
 
@@ -101,7 +101,8 @@ class ProductController extends Controller
      * Out-of-stock products are dropped because they cannot be bought, and the
      * result is capped so the home page never pulls the whole catalogue.
      */
-    public function trending(Request $request){
+    public function trending(Request $request)
+    {
         $limit = max(1, min((int) $request->input('limit', 8), 12));
 
         $products = Product::query()
@@ -119,7 +120,7 @@ class ProductController extends Controller
             // discard products whose orders were all cancelled.
             ->leftJoin('orders', function ($join) {
                 $join->on('orders.id', '=', 'order_items.order_id')
-                     ->where('orders.status', '!=', 'cancelled');
+                    ->where('orders.status', '!=', 'cancelled');
             })
             ->where('products.stock', '>', 0)
             ->groupBy('products.id')
@@ -141,7 +142,8 @@ class ProductController extends Controller
     }
 
     // Get /api/products/{id}/related
-    public function related(Request $request, $id){
+    public function related(Request $request, $id)
+    {
         $product = Product::findOrFail($id);
 
         $related = Product::with('category')
@@ -167,13 +169,14 @@ class ProductController extends Controller
     }
 
     // Post /api/products
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $validated = $request->validate([
-            'category_id' => ['required','exists:categories,id'],
-            'name' => ['required','string','max:255'],
-            'description' => ['nullable','string'],
-            'price' => ['required','numeric','min:0'],
-            'stock' => ['required','integer','min:0'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
         ]);
 
         $validated['slug'] = Str::slug($request->name);
@@ -185,8 +188,8 @@ class ProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Product created successfully',
-            'data' => $product
-        ],201);
+            'data' => $product,
+        ], 201);
     }
 
     /**
@@ -213,7 +216,8 @@ class ProductController extends Controller
     }
 
     // Get /api/products/{id}
-    public function show($id){
+    public function show($id)
+    {
         // The storefront links to /product/{slug}, so the key may be either a
         // numeric id or a slug. Feeding a slug straight into findOrFail() would
         // hit the bigint primary key and raise a PostgreSQL type error.
@@ -230,13 +234,14 @@ class ProductController extends Controller
     }
 
     // Put / PATCH /api/products/{id}
-    public function update(Request $request , $id){
+    public function update(Request $request, $id)
+    {
         $validated = $request->validate([
-            'category_id' => ['required','exists:categories,id'],
-            'name' => ['required','string','max:255'],
-            'description' => ['nullable','string'],
-            'price' => ['required','numeric','min:0'],
-            'stock' => ['required','integer','min:0'],
+            'category_id' => ['required', 'exists:categories,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'stock' => ['required', 'integer', 'min:0'],
         ]);
 
         $product = Product::findOrFail($id);
@@ -255,7 +260,8 @@ class ProductController extends Controller
     }
 
     // Delete /api/products/{id}
-    public function destroy($id){
+    public function destroy($id)
+    {
         $product = Product::findOrFail($id);
 
         // Remove the Cloudinary asset first: once the row is gone the URL is

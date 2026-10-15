@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\Schema;
 /**
  * Delivery coordinates picked on the checkout map.
  *
- * decimal(10,7) is the standard GPS precision: 7 decimal places is roughly
- * 1.1cm at the equator, and 10 digits of total precision covers the ±180
- * range. Nullable because rows created before the map existed have no pin.
+ * These two columns are the delivery location. They are nullable here because
+ * rows created before the map existed have no pin; the API still requires both
+ * on create. decimal(10,7) is the standard GPS precision: 7 decimal places is
+ * roughly 1.1cm at the equator, and 10 digits of total precision covers the
+ * ±180 range.
  *
- * shipping_address itself is untouched: it stays the human-readable label the
- * customer selected, and the coordinates are the machine-readable pair.
+ * shipping_address is optional and was made nullable by a later migration: the
+ * checkout map is coordinates-only and never reverse-geocodes the pin.
  */
 return new class extends Migration
 {

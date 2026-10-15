@@ -44,17 +44,18 @@ class Order extends Model
         ];
     }
 
-    public function user():BelongsTo{
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function orderItems():HasMany{
+    public function orderItems(): HasMany
+    {
         return $this->hasMany(Order_item::class);
     }
 
-    public function payment():HasOne{
+    public function payment(): HasOne
+    {
         return $this->hasOne(Payment::class);
     }
-
-
 }

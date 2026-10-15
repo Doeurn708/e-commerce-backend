@@ -19,7 +19,8 @@ class DashboardController extends Controller
     }
 
     // Get /api/admin/dashboard
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $this->authorizeAdmin($request);
 
         $stats = [

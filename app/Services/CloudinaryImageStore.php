@@ -42,9 +42,11 @@ class CloudinaryImageStore
     private const ALLOWED = 'mimes:jpg,jpeg,png,webp';
 
     /**
-     * 2048 kilobytes, so 2MB.
+     * 10240 kilobytes, so 10 MB. Camera photos are routinely larger than 2 MB,
+     * and a limit that low just pushed uploads into the "silently skipped" path.
+     * Must stay in sync with MAX_IMAGE_BYTES in frontend/src/utils/image.ts.
      */
-    private const MAX_KILOBYTES = 2048;
+    private const MAX_KILOBYTES = 10240;
 
     /**
      * Resolve the image input into the URL and public_id to persist.

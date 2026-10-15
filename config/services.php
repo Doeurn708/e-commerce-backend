@@ -38,13 +38,19 @@ return [
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env(
-            'GOOGLE_REDIRECT_URI',
-            'http://127.0.0.1:8000/api/auth/google/callback'
-        ),
-        'frontend_url' => env(
-            'FRONTEND_URL',
-            'http://localhost:5173'
-        ),
+
+        // Must match, byte for byte, a URI registered in Google Cloud Console.
+        // GOOGLE_REDIRECT_URI wins when set (an empty value is treated as unset
+        // so a blank Railway variable cannot break the flow); otherwise the
+        // callback is derived from APP_URL so production answers
+        // https://store-padon.com/api/auth/google/callback and local answers
+        // http://127.0.0.1:8000/api/auth/google/callback. The path mirrors the
+        // `api/auth/google/callback` route declared in routes/api.php.
+        'redirect' => env('GOOGLE_REDIRECT_URI')
+            ?: rtrim((string) env('APP_URL', 'http://localhost'), '/').'/api/auth/google/callback',
+
+        // Single SPA origin (never a list): GoogleAuthController appends
+        // /auth/google/callback to it when it builds the post-login redirect.
+        'frontend_url' => env('FRONTEND_URL') ?: 'http://localhost:5173',
     ],
 ];

@@ -53,7 +53,7 @@ class OtpController extends Controller
             ->where('verified', false)
             ->first();
 
-        if (!$otp) {
+        if (! $otp) {
             return response()->json([
                 'message' => 'Invalid OTP.',
             ], 422);

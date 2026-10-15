@@ -145,17 +145,31 @@ class ProductImageTest extends TestCase
         $this->assertDatabaseCount('products', 0);
     }
 
-    public function test_it_rejects_an_image_larger_than_two_megabytes(): void
+    public function test_it_rejects_an_image_larger_than_ten_megabytes(): void
     {
         $this->fakeCloudinary();
         $category = $this->category();
         $this->admin();
 
         $this->post('/api/products', $this->payload($category) + [
-            'image' => UploadedFile::fake()->image('huge.jpg')->size(3000),
+            'image' => UploadedFile::fake()->image('huge.jpg')->size(11000),
         ], ['Accept' => 'application/json'])->assertStatus(422)->assertJsonValidationErrors('image');
 
         $this->assertDatabaseCount('products', 0);
+    }
+
+    public function test_it_accepts_an_image_between_two_and_ten_megabytes(): void
+    {
+        $this->fakeCloudinary();
+        $category = $this->category();
+        $this->admin();
+
+        // The old 2 MB cap silently dropped ordinary camera photos.
+        $this->post('/api/products', $this->payload($category) + [
+            'image' => UploadedFile::fake()->image('camera.jpg')->size(3000),
+        ], ['Accept' => 'application/json'])->assertCreated();
+
+        $this->assertSame('products/photo-1', Product::firstOrFail()->image_public_id);
     }
 
     public function test_it_rejects_an_upload_from_a_non_admin_user(): void

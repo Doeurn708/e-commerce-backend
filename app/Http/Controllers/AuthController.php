@@ -15,11 +15,13 @@ class AuthController extends Controller
     private const AVATAR_FOLDER = 'avatars';
 
     public function __construct(private CloudinaryImageStore $images) {}
-    public function register(Request $request){
+
+    public function register(Request $request)
+    {
         $validated = $request->validate([
-            'name' => ['required','string','max:255'],
-            'email' => ['required','email','unique:users,email'],
-            'password' => ['required','string','min:8','confirmed'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $user = User::create([
@@ -34,21 +36,22 @@ class AuthController extends Controller
             'message' => 'Register successfully',
             'user' => $user,
             'token' => $token,
-        ],201);
+        ], 201);
     }
 
-    public function login (Request $request){
+    public function login(Request $request)
+    {
         $validated = $request->validate([
-            'email' => ['required','email'],
-            'password' => ['required','string'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email',$validated['email'])->first();
+        $user = User::where('email', $validated['email'])->first();
 
-        if(!$user || !Hash::check($validated['password'], $user->password)){
-            return response() ->json([
-                'message' => "Invalid email or password "
-            ],401);
+        if (! $user || ! Hash::check($validated['password'], $user->password)) {
+            return response()->json([
+                'message' => 'Invalid email or password ',
+            ], 401);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -56,16 +59,17 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'login successfully',
             'user' => $user,
-            'token' => $token
+            'token' => $token,
         ]);
     }
 
     // POST /api/reset-password
-    public function resetPassword(Request $request){
+    public function resetPassword(Request $request)
+    {
         $validated = $request->validate([
-            'email' => ['required','email','exists:users,email'],
-            'password' => ['required','string','min:8','confirmed'],
-            'otp' => ['required','digits:6'],
+            'email' => ['required', 'email', 'exists:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'otp' => ['required', 'digits:6'],
         ]);
 
         // the reset only goes through with a verified, unexpired code for this email
@@ -78,7 +82,7 @@ class AuthController extends Controller
         if (! $verified) {
             return response()->json([
                 'message' => 'Invalid or expired verification code',
-            ],422);
+            ], 422);
         }
 
         $user = User::where('email', $validated['email'])->firstOrFail();
@@ -96,22 +100,24 @@ class AuthController extends Controller
     }
 
     // GET /api/user
-    public function user(Request $request){
+    public function user(Request $request)
+    {
         return response()->json([
-            'user' => $this->presentUser($request->user())
+            'user' => $this->presentUser($request->user()),
         ]);
     }
 
     // PATCH|PUT /api/user/profile
-    public function updateProfile(Request $request){
+    public function updateProfile(Request $request)
+    {
         $user = $request->user();
 
         // `sometimes` so the modal can send just the avatar, and email/role are
         // intentionally absent: changing them needs its own verified flow.
         $validated = $request->validate([
-            'name' => ['sometimes','required','string','max:255'],
-            'phone' => ['sometimes','nullable','string','max:30'],
-            'remove_avatar' => ['sometimes','boolean'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
+            'remove_avatar' => ['sometimes', 'boolean'],
         ]);
 
         foreach (['name', 'phone'] as $field) {
@@ -158,7 +164,8 @@ class AuthController extends Controller
     }
 
     // POST /api/logout
-    public function logout(Request $request){
+    public function logout(Request $request)
+    {
         $request->user()->currentAccessToken()->delete();
 
         return response()->json([

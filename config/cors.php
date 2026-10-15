@@ -1,5 +1,14 @@
 <?php
 
+// Local dev server plus the deployed SPA. Used as the default and as the
+// fallback when CORS_ALLOWED_ORIGINS is set but empty, so a blank variable in
+// a deployment can never lock the frontend out.
+$default_origins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://store-padon.vercel.app',
+];
+
 return [
 
     /*
@@ -16,6 +25,10 @@ return [
     | separate from `FRONTEND_URL`, which must stay a single URL because
     | GoogleAuthController uses it to build the OAuth callback redirect.
     |
+    | The default already lists the local dev server and the deployed SPA so a
+    | fresh environment works out of the box; deployments may still override it
+    | with their own comma separated list.
+    |
     */
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
@@ -24,8 +37,8 @@ return [
 
     'allowed_origins' => array_values(array_filter(array_map(
         'trim',
-        explode(',', (string) env('CORS_ALLOWED_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173'))
-    ))),
+        explode(',', (string) env('CORS_ALLOWED_ORIGINS', implode(',', $default_origins)))
+    ))) ?: $default_origins,
 
     'allowed_origins_patterns' => [],
 

@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Str;
 
+// Resolved once so an empty value is treated the same as an unset one.
+$session_secure_cookie = env('SESSION_SECURE_COOKIE');
+
 return [
 
     /*
@@ -167,9 +170,18 @@ return [
     | to the server if the browser has a HTTPS connection. This will keep
     | the cookie from being sent to you when it can't be done securely.
     |
+    | SESSION_SECURE_COOKIE is authoritative when it is set (false for local
+    | HTTP development, true on the HTTPS deployment). When it is missing or
+    | empty the application falls back to the environment, so production ships
+    | Secure cookies without any extra configuration and local HTTP still works.
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    'secure' => filter_var(
+        $session_secure_cookie === null || $session_secure_cookie === ''
+            ? env('APP_ENV') === 'production'
+            : $session_secure_cookie,
+        FILTER_VALIDATE_BOOLEAN
+    ),
 
     /*
     |--------------------------------------------------------------------------

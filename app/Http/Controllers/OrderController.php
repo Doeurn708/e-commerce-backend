@@ -21,7 +21,8 @@ class OrderController extends Controller
     }
 
     // Get /api/orders
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $query = Order::with([
             'user',
             'orderItems.product',
@@ -80,27 +81,30 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $orders
+            'data' => $orders,
         ]);
     }
 
     // Post /api/orders
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $validated = $request->validate([
-            'payment_method' => ['nullable','in:cod,online'],
-            // The checkout map supplies both the label and the pin, so they are
-            // validated together: an address without coordinates cannot be
-            // delivered to and vice versa.
-            'shipping_address' => ['required','string','max:255'],
-            'latitude' => ['required','numeric','between:-90,90'],
-            'longitude' => ['required','numeric','between:-180,180'],
-            'phone' => ['required','string','max:20'],
-            'city' => ['nullable','string','max:255'],
-            'province' => ['nullable','string','max:255'],
-            'postal_code' => ['nullable','string','max:20'],
-            'items' => ['required','array','min:1'],
-            'items.*.product_id' => ['required','exists:products,id'],
-            'items.*.quantity' => ['required','integer','min:1'],
+            'payment_method' => ['nullable', 'in:cod,online'],
+            // The delivery location is a coordinate pair. The checkout map is
+            // coordinates-only: nothing reverse-geocodes the pin, so there is no
+            // street address to require and one is never produced by the
+            // client. Still validated when supplied (an admin or older client
+            // may send one) so a bad value cannot be written.
+            'shipping_address' => ['nullable', 'string', 'max:255'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'phone' => ['required', 'string', 'max:20'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'province' => ['nullable', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
 
         $order = DB::transaction(function () use ($request, $validated) {
@@ -110,7 +114,9 @@ class OrderController extends Controller
                 'user_id' => $request->user()->id,
                 'total_price' => 0,
                 'status' => 'pending',
-                'shipping_address' => $validated['shipping_address'],
+                // Absent rather than an empty string: the checkout sends no
+                // address, and storing '' would be a meaningless row value.
+                'shipping_address' => $validated['shipping_address'] ?? null,
                 'latitude' => $validated['latitude'],
                 'longitude' => $validated['longitude'],
                 'phone' => $validated['phone'],
@@ -120,10 +126,10 @@ class OrderController extends Controller
                 'payment_method' => $validated['payment_method'] ?? 'cod',
             ]);
 
-            foreach($validated['items'] as $item){
+            foreach ($validated['items'] as $item) {
                 $product = Product::findOrFail($item['product_id']);
 
-                if($product->stock < $item['quantity']){
+                if ($product->stock < $item['quantity']) {
                     abort(422, "Not enough stock for {$product->name}");
                 }
 
@@ -157,11 +163,12 @@ class OrderController extends Controller
             'success' => true,
             'message' => 'Order created successfully',
             'data' => $this->present($order),
-        ],201);
+        ], 201);
     }
 
     // Get /api/orders/{id}
-    public function show(Request $request , $id){
+    public function show(Request $request, $id)
+    {
         $order = Order::with([
             'user',
             'orderItems.product',
@@ -169,33 +176,34 @@ class OrderController extends Controller
         ])->withCount('orderItems as items_count')->findOrFail($id);
 
         $isAdmin = $request->user()->role === 'admin';
-        if (!$isAdmin && $order->user_id !== $request->user()->id){
+        if (! $isAdmin && $order->user_id !== $request->user()->id) {
             return response()->json([
                 'message' => 'Unauthorized',
-            ],403);
+            ], 403);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $this->present($order)
+            'data' => $this->present($order),
         ]);
     }
 
     // Patch /api/orders/{id}/cancel
-    public function cancel(Request $request, $id){
+    public function cancel(Request $request, $id)
+    {
         $order = Order::with('orderItems.product')->findOrFail($id);
 
         // only the owner or an admin may cancel, and only while still pending
         if ($request->user()->role !== 'admin' && $order->user_id !== $request->user()->id) {
             return response()->json([
                 'message' => 'Unauthorized',
-            ],403);
+            ], 403);
         }
 
         if ($order->status !== 'pending') {
             return response()->json([
                 'message' => 'Only pending orders can be cancelled.',
-            ],422);
+            ], 422);
         }
 
         DB::transaction(function () use ($order) {
@@ -217,12 +225,13 @@ class OrderController extends Controller
     }
 
     // Patch /api/orders/{id}/status
-    public function updateStatus(Request $request , $id){
+    public function updateStatus(Request $request, $id)
+    {
         $this->authorizeAdmin($request);
 
         $validated = $request->validate([
             'status' => [
-                'required','in:pending,processing,completed,cancelled',
+                'required', 'in:pending,processing,completed,cancelled',
             ],
         ]);
 

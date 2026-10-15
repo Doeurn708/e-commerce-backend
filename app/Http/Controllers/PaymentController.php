@@ -17,7 +17,8 @@ class PaymentController extends Controller
     }
 
     // Get /api/payments
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $this->authorizeAdmin($request);
 
         $payments = Payment::with('order.user')->latest()->paginate(10);
@@ -29,13 +30,14 @@ class PaymentController extends Controller
     }
 
     // Post /api/payments
-    public function store(Request $request){
+    public function store(Request $request)
+    {
         $validated = $request->validate([
-            'order_id' => ['required','exists:orders,id'],
-            'amount' => ['required','numeric','min:0'],
-            'payment_method' => ['nullable','string','max:100'],
-            'payment_status' => ['sometimes','in:paid,unpaid,refunded'],
-            'transaction_id' => ['nullable','string','max:255'],
+            'order_id' => ['required', 'exists:orders,id'],
+            'amount' => ['required', 'numeric', 'min:0'],
+            'payment_method' => ['nullable', 'string', 'max:100'],
+            'payment_status' => ['sometimes', 'in:paid,unpaid,refunded'],
+            'transaction_id' => ['nullable', 'string', 'max:255'],
         ]);
 
         $order = Order::findOrFail($validated['order_id']);
@@ -62,11 +64,12 @@ class PaymentController extends Controller
             'success' => true,
             'message' => 'Payment recorded successfully',
             'data' => $payment,
-        ],201);
+        ], 201);
     }
 
     // Get /api/payments/{id}
-    public function show(Request $request, $id){
+    public function show(Request $request, $id)
+    {
         $this->authorizeAdmin($request);
 
         $payment = Payment::with('order.user')->findOrFail($id);
@@ -78,14 +81,15 @@ class PaymentController extends Controller
     }
 
     // Patch /api/payments/{id}
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         $this->authorizeAdmin($request);
 
         $validated = $request->validate([
-            'amount' => ['sometimes','numeric','min:0'],
-            'payment_method' => ['nullable','string','max:100'],
-            'payment_status' => ['sometimes','in:paid,unpaid,refunded'],
-            'transaction_id' => ['nullable','string','max:255'],
+            'amount' => ['sometimes', 'numeric', 'min:0'],
+            'payment_method' => ['nullable', 'string', 'max:100'],
+            'payment_status' => ['sometimes', 'in:paid,unpaid,refunded'],
+            'transaction_id' => ['nullable', 'string', 'max:255'],
         ]);
 
         $payment = Payment::findOrFail($id);
@@ -109,7 +113,8 @@ class PaymentController extends Controller
     }
 
     // Delete /api/payments/{id}
-    public function destroy(Request $request, $id){
+    public function destroy(Request $request, $id)
+    {
         $this->authorizeAdmin($request);
 
         $payment = Payment::findOrFail($id);
