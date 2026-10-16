@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', (env('DATABASE_URL') || env('PGHOST')) ? 'pgsql' : 'sqlite'),
 
     /*
     |--------------------------------------------------------------------------
@@ -86,16 +86,27 @@ return [
 
         'pgsql' => [
             'driver' => 'pgsql',
-            'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'laravel'),
-            'username' => env('DB_USERNAME', 'root'),
-            'password' => env('DB_PASSWORD', ''),
+            // Resolution order, first non-empty wins:
+            //   1. DB_URL / DATABASE_URL  - a single "postgres://user:pass@host:port/db" string
+            //   2. the discrete DB_* vars  - as documented in .env.example
+            //   3. Railway's PGHOST/PGPORT/PGDATABASE/PGUSER/PGPASSWORD
+            //      (injected automatically when a Postgres service is linked)
+            //   4. localhost defaults
+            // This is what lets the production deploy connect without hand-copying
+            // the connection string into five separate variables.
+            'url' => env('DB_URL') ?: env('DATABASE_URL'),
+            'host' => env('DB_HOST') ?: env('PGHOST', '127.0.0.1'),
+            'port' => env('DB_PORT') ?: env('PGPORT', '5432'),
+            'database' => env('DB_DATABASE') ?: env('PGDATABASE', 'laravel'),
+            'username' => env('DB_USERNAME') ?: env('PGUSER', 'root'),
+            'password' => env('DB_PASSWORD') ?: env('PGPASSWORD', ''),
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
+            // "prefer" negotiates TLS when the server offers it and falls back to
+            // plaintext otherwise, so it works both on Railway's private network
+            // (no TLS) and through its public proxy (TLS required).
             'sslmode' => env('DB_SSLMODE', 'prefer'),
         ],
 

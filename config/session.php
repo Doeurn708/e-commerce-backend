@@ -5,6 +5,17 @@ use Illuminate\Support\Str;
 // Resolved once so an empty value is treated the same as an unset one.
 $session_secure_cookie = env('SESSION_SECURE_COOKIE');
 
+// SESSION_DOMAIN must be a real cookie domain (".example.com", "example.com")
+// or "localhost", or left unset so the cookie is host-only. A bare token such
+// as "sync" is not a domain and makes the browser reject the session cookie, so
+// anything without a dot is treated as unset rather than shipped as-is.
+$session_domain = env('SESSION_DOMAIN');
+$session_domain = is_string($session_domain) ? trim($session_domain) : $session_domain;
+if ($session_domain === ''
+    || ($session_domain !== null && ! str_contains($session_domain, '.') && $session_domain !== 'localhost')) {
+    $session_domain = null;
+}
+
 return [
 
     /*
@@ -159,7 +170,7 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => $session_domain,
 
     /*
     |--------------------------------------------------------------------------

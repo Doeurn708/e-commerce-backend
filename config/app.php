@@ -52,7 +52,11 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    // Set APP_URL explicitly when you have a custom domain. When it is unset
+    // (a fresh Railway deploy), fall back to the Railway-provided public domain
+    // so absolute URLs, the Google OAuth callback and asset links point at the
+    // live host instead of http://localhost.
+    'url' => env('APP_URL') ?: (env('RAILWAY_PUBLIC_DOMAIN') ? 'https://'.env('RAILWAY_PUBLIC_DOMAIN') : 'http://localhost'),
 
     /*
     |--------------------------------------------------------------------------

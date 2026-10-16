@@ -1,8 +1,8 @@
 {
     "$schema": "https://railway.com/railway.schema.json",
     "deploy": {
-        "preDeployCommand": "php artisan migrate --force",
-        "startCommand": "php artisan serve --host=0.0.0.0 --port=$PORT",
+        "preDeployCommand": "php artisan config:clear && php artisan migrate --force && php artisan db:seed --force",
+        "startCommand": "php artisan config:clear && php artisan serve --host=0.0.0.0 --port=$PORT",
         "healthcheckPath": "/up",
         "healthcheckTimeout": 60
     }

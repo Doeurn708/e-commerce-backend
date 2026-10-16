@@ -38,7 +38,10 @@ class OrderController extends Controller
         if ($request->filled('search')) {
             $q = $request->input('search');
             $query->where(function ($builder) use ($q) {
-                $builder->where('id', 'like', "%{$q}%")
+                // PostgreSQL has no LIKE operator for integers: `id LIKE ?` fails
+                // with "operator does not exist: bigint ~~ unknown". Cast the id
+                // to text so the numeric search works like it does on MySQL.
+                $builder->whereRaw('orders.id::text like ?', ["%{$q}%"])
                     ->orWhere('shipping_address', 'like', "%{$q}%")
                     ->orWhereHas('user', function ($user) use ($q) {
                         $user->where('name', 'like', "%{$q}%")
