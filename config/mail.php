@@ -42,7 +42,7 @@ return [
             // MAIL_SCHEME is the modern setting ("smtp" for STARTTLS on 587,
             // "smtps" for implicit TLS on 465). MAIL_ENCRYPTION is accepted too,
             // because that is the variable most SMTP providers still document.
-            'scheme' => env('MAIL_SCHEME') ?: match (env('MAIL_ENCRYPTION')) {
+            'scheme' => env('MAIL_SCHEME') ?: match (strtolower((string) env('MAIL_ENCRYPTION'))) {
                 'tls', 'starttls' => 'smtp',
                 'ssl' => 'smtps',
                 default => null,

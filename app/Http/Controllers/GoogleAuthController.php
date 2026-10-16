@@ -25,9 +25,29 @@ class GoogleAuthController extends Controller
     /**
      * Redirect the user to Google's login page.
      */
-    public function redirect(): RedirectResponse
+    public function redirect(): RedirectResponse|JsonResponse
     {
+        // Without a client id the request reaches Google with no client_id and
+        // Google answers with an "invalid_request" screen and no way back to the
+        // SPA, which looks like the button "does nothing". Fail fast instead,
+        // using the same response shape as a failed callback so the SPA shows a
+        // real message.
+        if (! $this->isConfigured()) {
+            return $this->respond([
+                'error' => 'Google sign-in is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.',
+            ], 503);
+        }
+
         return $this->driver()->stateless()->redirect();
+    }
+
+    /**
+     * Whether the Google OAuth client credentials are present.
+     */
+    private function isConfigured(): bool
+    {
+        return filled(config('services.google.client_id'))
+            && filled(config('services.google.client_secret'));
     }
 
     /**

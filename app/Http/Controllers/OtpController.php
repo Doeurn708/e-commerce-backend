@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Otp;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class OtpController extends Controller
 {
@@ -21,20 +23,29 @@ class OtpController extends Controller
         Otp::where('email', $request->email)->delete();
 
         // Store OTP
-        Otp::create([
+        $otpRecord = Otp::create([
             'email' => $request->email,
             'otp' => $otp,
             'expires_at' => now()->addMinutes(5),
         ]);
 
         // Send email
-        Mail::raw(
-            "Your OTP code is: {$otp}. This code will expire in 5 minutes.",
-            function ($message) use ($request) {
-                $message->to($request->email)
-                    ->subject('Your OTP Code');
-            }
-        );
+        try {
+            Mail::raw(
+                "Your OTP code is: {$otp}. This code will expire in 5 minutes.",
+                function ($message) use ($request) {
+                    $message->to($request->email)
+                        ->subject('Your OTP Code');
+                }
+            );
+        } catch (Throwable $e) {
+            Log::error('Failed to send OTP email: '.$e->getMessage());
+            $otpRecord->delete();
+
+            return response()->json([
+                'message' => 'Failed to send OTP email. Please verify SMTP settings and try again.',
+            ], 500);
+        }
 
         return response()->json([
             'message' => 'OTP sent successfully.',

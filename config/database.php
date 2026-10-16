@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', (env('DATABASE_URL') || env('PGHOST')) ? 'pgsql' : 'sqlite'),
+    'default' => env('DB_CONNECTION', (env('DB_URL') || env('DATABASE_URL') || env('PGHOST')) ? 'pgsql' : 'sqlite'),
 
     /*
     |--------------------------------------------------------------------------
@@ -95,7 +95,9 @@ return [
             // This is what lets the production deploy connect without hand-copying
             // the connection string into five separate variables.
             'url' => env('DB_URL') ?: env('DATABASE_URL'),
-            'host' => env('DB_HOST') ?: env('PGHOST', '127.0.0.1'),
+            'host' => (env('DB_HOST') && !in_array(env('DB_HOST'), ['127.0.0.1', 'localhost'], true))
+                ? env('DB_HOST')
+                : (env('PGHOST') ?: env('DB_HOST', '127.0.0.1')),
             'port' => env('DB_PORT') ?: env('PGPORT', '5432'),
             'database' => env('DB_DATABASE') ?: env('PGDATABASE', 'laravel'),
             'username' => env('DB_USERNAME') ?: env('PGUSER', 'root'),
